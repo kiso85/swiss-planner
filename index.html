@@ -54,6 +54,17 @@ header .spacer{flex:1}
 .dest-tag.stp{background:rgba(61,107,53,0.1);color:var(--green)}
 .dest-tag.cost{background:rgba(176,138,46,0.1);color:#7a5a14}
 
+/* Transport breakdown rows */
+.tr-list{margin-top:6px;display:flex;flex-direction:column;gap:3px}
+.tr-row{display:flex;align-items:center;gap:5px;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:0.03em;line-height:1}
+.tr-mode{background:var(--paper-deep);padding:1px 5px;border-radius:2px;font-weight:600;min-width:28px;text-align:center;color:var(--ink)}
+.tr-seg{color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-badge{padding:1px 4px;border-radius:2px;font-size:8.5px;font-weight:500;white-space:nowrap}
+.tr-badge.tr-free{background:rgba(61,107,53,0.15);color:var(--green)}
+.tr-badge.tr-disc{background:rgba(176,138,46,0.15);color:#7a5a14}
+.tr-badge.tr-no{background:rgba(216,35,42,0.08);color:var(--red-deep)}
+.tr-price{color:var(--muted);font-size:8.5px}
+
 /* Config row */
 .config-row{display:flex;gap:20px;margin-top:20px;padding-top:18px;border-top:1px solid rgba(0,0,0,0.1);flex-wrap:wrap;align-items:end}
 .config-field label{display:block;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600}
@@ -366,9 +377,9 @@ footer{padding:28px;text-align:center;font-size:11px;color:var(--muted);line-hei
    DATA — All destinations, routes, prices
    ========================================================================== */
 const DESTS = {
-  // ---- Lucerne / Central ----
   lucerne:     {name:"Luzern",cn:"卢塞恩",region:"central",mx:505,my:240,halfDay:true,
     tag:"卡佩尔廊桥 + 四森林湖畔",
+    transports:[{mode:"火车",seg:"苏黎世→卢塞恩",stp:"免费",sdp:"含",p:28}],
     attractions:[
       {name:"卡佩尔廊桥 / 老城",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"瑞士交通博物馆",price:35,badges:[{type:"free",text:"STP 免费"}]},
@@ -376,6 +387,11 @@ const DESTS = {
     ]},
   rigi:        {name:"Rigi",cn:"瑞吉山",region:"central",mx:530,my:260,halfDay:true,
     tag:"群山女王 · STP 全免",
+    transports:[
+      {mode:"游船",seg:"卢塞恩→Vitznau",stp:"免费",sdp:"含",p:28},
+      {mode:"齿轨",seg:"Vitznau→Rigi Kulm",stp:"免费",sdp:"含",p:38},
+      {mode:"缆车",seg:"Rigi→Weggis",stp:"免费",sdp:"含",p:12}
+    ],
     attractions:[
       {name:"齿轨 + 缆车往返",price:78,badges:[{type:"free",text:"STP 全免"},{type:"half",text:"HFC 半价"}]},
       {name:"Rigi Kulm 山顶观景",price:0,badges:[{type:"free",text:"免费"}]},
@@ -383,19 +399,27 @@ const DESTS = {
     ]},
   pilatus:     {name:"Pilatus",cn:"皮拉图斯山",region:"central",mx:480,my:255,halfDay:true,
     tag:"金色环游 · 龙之山",
+    transports:[
+      {mode:"游船",seg:"卢塞恩→Alpnachstad",stp:"免费",sdp:"含",p:18},
+      {mode:"齿轨",seg:"Alpnachstad→山顶",stp:"-50%",sdp:"不含",p:72},
+      {mode:"缆车",seg:"山顶→Kriens",stp:"-50%",sdp:"不含",p:0}
+    ],
     attractions:[
       {name:"金色环游 (船+齿轨+缆车)",price:108,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
       {name:"山顶 Dragon Ride 缆车",price:0,badges:[{type:"discount",text:"票价含"}]}
     ]},
-  // ---- Bernese Oberland ----
   interlaken:  {name:"Interlaken",cn:"因特拉肯",region:"oberland",mx:395,my:313,halfDay:true,
     tag:"两湖之间的少女峰门户",
+    transports:[{mode:"火车",seg:"卢塞恩→因特拉肯",stp:"免费",sdp:"含",p:34}],
     attractions:[
       {name:"Höhematte 公园 + 老城",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"图恩湖 / 布里恩茨湖游船",price:64,badges:[{type:"free",text:"STP 免费"},{type:"half",text:"HFC 半价"}]}
     ]},
   harderKulm:  {name:"Harder Kulm",cn:"哈德库尔姆",region:"oberland",mx:400,my:305,halfDay:true,
     tag:"因特拉肯旁 · 双湖桥全景 · 10分钟缆车",
+    transports:[
+      {mode:"缆车",seg:"因特拉肯东→山顶",stp:"-50%",sdp:"不含",p:44}
+    ],
     attractions:[
       {name:"缆车往返",price:44,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
       {name:"双湖桥 (Two Lakes Bridge)",price:0,badges:[{type:"free",text:"缆车票含"}]},
@@ -403,6 +427,10 @@ const DESTS = {
     ]},
   grindelwaldFirst:{name:"Grindelwald First",cn:"格林德瓦尔德 First",region:"oberland",mx:450,my:285,fullDay:true,
     tag:"Cliff Walk + Bachalpsee + 滑索",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→Grindelwald",stp:"免费",sdp:"含",p:12},
+      {mode:"缆车",seg:"Grindelwald→First",stp:"-50%",sdp:"不含",p:76}
+    ],
     attractions:[
       {name:"缆车往返",price:76,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
       {name:"Cliff Walk 玻璃悬崖步道",price:0,badges:[{type:"free",text:"缆车票含"}]},
@@ -411,7 +439,11 @@ const DESTS = {
       {name:"Mountain Cart",price:19,badges:[{type:"discount",text:"STP -50%"}]}
     ]},
   jungfraujoch: {name:"Jungfraujoch",cn:"少女峰 · 欧洲之巅",region:"oberland",mx:435,my:270,fullDay:true,
-    tag:"Top of Europe · 3,454m · STP 25%折扣",
+    tag:"Top of Europe · 3,454m",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→Wengen",stp:"免费",sdp:"含",p:0},
+      {mode:"齿轨",seg:"Wengen→少女峰 (私营)",stp:"-25%",sdp:"不含",p:196}
+    ],
     attractions:[
       {name:"Sphinx 观景台 + 冰宫",price:0,badges:[{type:"discount",text:"票价含"}]},
       {name:"Eiger Express 缆车",price:0,badges:[{type:"discount",text:"票价含"}]},
@@ -419,13 +451,20 @@ const DESTS = {
     ]},
   lauterbrunnen:{name:"Lauterbrunnen",cn:"劳特布鲁嫩",region:"oberland",mx:388,my:300,halfDay:true,
     tag:"瀑布谷 · 72 条瀑布从悬崖落下",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→劳特布鲁嫩",stp:"免费",sdp:"含",p:8}
+    ],
     attractions:[
       {name:"Staubbach 瀑布",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"Trümmelbach 冰川瀑布",price:16,badges:[]},
       {name:"Mürren 缆车小镇",price:0,badges:[{type:"free",text:"STP 含"}]}
     ]},
   schynigePlatte:{name:"Schynige Platte",cn:"先伊格",region:"oberland",mx:415,my:340,halfDay:true,
-    tag:"百年蒸汽齿轨 + 三连峰 · STP 50%",
+    tag:"百年蒸汽齿轨 + 三连峰",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→Wilderswil",stp:"免费",sdp:"含",p:4},
+      {mode:"齿轨",seg:"Wilderswil→山顶 (私营)",stp:"-50%",sdp:"不含",p:72}
+    ],
     attractions:[
       {name:"蒸汽齿轨往返",price:72,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
       {name:"高山植物园",price:0,badges:[{type:"free",text:"齿轨票含"}]},
@@ -433,6 +472,9 @@ const DESTS = {
     ]},
   spiez:       {name:"Spiez",cn:"施皮茨",region:"oberland",mx:358,my:367,halfDay:true,
     tag:"图恩湖南岸葡萄园小镇",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→Spiez",stp:"免费",sdp:"含",p:14}
+    ],
     attractions:[
       {name:"Spiez 城堡 + 千年教堂",price:12,badges:[{type:"free",text:"STP 免费"}]},
       {name:"老城 + 港口步行",price:0,badges:[{type:"free",text:"免费"}]},
@@ -440,15 +482,22 @@ const DESTS = {
     ]},
   oeschinensee:{name:"Oeschinensee",cn:"厄希嫩湖",region:"oberland",mx:370,my:398,halfDay:true,
     tag:"世遗高山碧湖 · 缆车需预约",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→Kandersteg",stp:"免费",sdp:"含",p:21},
+      {mode:"缆车",seg:"Kandersteg→山顶",stp:"-50%",sdp:"不含",p:36}
+    ],
     attractions:[
       {name:"缆车往返",price:36,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
       {name:"湖边步道",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"湖上划船 (1h)",price:30,badges:[]},
       {name:"夏季滑道 Rodelbahn",price:9,badges:[]}
     ]},
-  // ---- Valais / Geneva ----
   zermatt:     {name:"Zermatt",cn:"采尔马特",region:"valais",mx:232,my:455,halfDay:true,specialEvening:true,
     tag:"马特宏峰 · 7月底21:00日落",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→Visp",stp:"免费",sdp:"含",p:44},
+      {mode:"窄轨",seg:"Visp→Zermatt (MGB)",stp:"免费",sdp:"含",p:34}
+    ],
     attractions:[
       {name:"教堂桥 + Bahnhofstrasse",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"Gornergrat 齿轨",price:132,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
@@ -456,6 +505,9 @@ const DESTS = {
     ]},
   bern:        {name:"Bern",cn:"伯尔尼",region:"central",mx:263,my:270,halfDay:true,
     tag:"联邦首都 · 中世纪老城世遗",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→伯尔尼",stp:"免费",sdp:"含",p:32}
+    ],
     attractions:[
       {name:"老城 + 时钟塔",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"爱因斯坦故居",price:8,badges:[{type:"free",text:"STP 免费"}]},
@@ -463,6 +515,9 @@ const DESTS = {
     ]},
   geneva:      {name:"Genève",cn:"日内瓦",region:"lake",mx:120,my:385,halfDay:true,
     tag:"莱芒湖畔的国际之城",
+    transports:[
+      {mode:"火车",seg:"伯尔尼→日内瓦",stp:"免费",sdp:"含",p:56}
+    ],
     attractions:[
       {name:"大喷泉 Jet d'Eau",price:0,badges:[{type:"free",text:"免费"}]},
       {name:"红十字博物馆",price:15,badges:[{type:"free",text:"STP 免费"}]},
@@ -480,7 +535,7 @@ const LAKES = [
 // Route database: key = "from-to", bidir
 const ROUTES = {
   "zurich-lucerne":{dur:"41 min",durN:41,mode:"train",type:"IR 70",freq:"每30分钟",price:28,
-    stp:{p:0,n:"STP 全免"},hfc:{p:14,n:"半价"},saver:{p:null,n:"含"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:14,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"06:04",e:"06:45",tr:"IR 70"},{t:"06:35",e:"07:16",tr:"IR 70"},{t:"07:04",e:"07:45",tr:"IR 70"},{t:"07:35",e:"08:16",tr:"IR 70"}],
     note:"每小时 04 分和 35 分发车，瑞士最繁忙城际线之一。",tip:"苏黎世 HB → 卢塞恩直达，无需换乘。"},
   "zurich-bern":{dur:"58 min",durN:58,mode:"train",type:"IC 1",freq:"每30分钟",price:51,
@@ -504,14 +559,14 @@ const ROUTES = {
     tt:[{t:"07:35",e:"09:47",tr:"S3+JB"},{t:"08:05",e:"10:17",tr:"EigerEx"},{t:"08:35",e:"10:47",tr:"S3+JB"}],
     note:"5-10 月需强制预订座位 (CHF 10)。",tip:"STP 只给 25% 折扣 (私营齿轨段)。HFC 50% 折扣更划算。"},
   "interlaken-lauterbrunnen":{dur:"20 min",durN:20,mode:"train",type:"S3",freq:"每30分钟",price:8,
-    stp:{p:0,n:"STP 全免"},hfc:{p:4,n:"半价"},saver:{p:null,n:"含"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:4,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"频繁",e:"—",tr:"S3"}],note:"S3 列车直达。",tip:"劳特布鲁嫩是 72 条瀑布的起点。"},
   "interlaken-spiez":{dur:"20 min",durN:20,mode:"train",type:"IC 6/8",freq:"每15分钟",price:14,
-    stp:{p:0,n:"STP 全免"},hfc:{p:7,n:"半价"},saver:{p:null,n:"含"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:7,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"09:00",e:"09:20",tr:"IC 6"},{t:"09:15",e:"09:35",tr:"IC 8"},{t:"09:30",e:"09:50",tr:"IC 6"}],
     note:"每 15 分钟一班，沿图恩湖南岸。",tip:"Spiez 老城在车站下方 5 分钟步行。"},
   "interlaken-oeschinensee":{dur:"1h",durN:60,mode:"train",type:"IC+RE (经Spiez)",freq:"每30分钟",price:21,
-    stp:{p:0,n:"火车全免 + 缆车半价18"},hfc:{p:11,n:"火车半价 + 缆车半价18"},saver:{p:null,n:"火车含 + 缆车不含"},
+    stp:{p:0,n:"火车全免 + 缆车半价18"},hfc:{p:11,n:"火车半价 + 缆车半价18"},saver:{p:"incl",n:"日票含火车段 · 缆车不覆盖需另买"},
     tt:[{t:"08:04",e:"09:07",tr:"IC+RE"},{t:"09:04",e:"10:07",tr:"IC+RE"}],
     note:"Spiez 换乘一次，4-6 分钟。",tip:"2026 年起缆车必须提前预约时段。"},
   "interlaken-schynigePlatte":{dur:"1h15",durN:75,mode:"cog",type:"S3+SPB蒸汽车",freq:"每40分钟",price:72,unit:"齿轨往返",isReturn:true,
@@ -538,7 +593,7 @@ const ROUTES = {
     tt:[{t:"13:00",e:"13:56",tr:"IC 1"},{t:"14:00",e:"14:56",tr:"IC 1"},{t:"15:00",e:"15:56",tr:"IC 1"}],
     note:"双层 IC 1。",tip:"Zürich HB → 机场再坐 10 min S-Bahn (STP 含)。"},
   "lucerne-rigi":{dur:"2h 环线",durN:120,mode:"boat",type:"船+齿轨+缆车",freq:"每小时",price:78,unit:"环线全套",isReturn:true,
-    stp:{p:0,n:"STP 全免！"},hfc:{p:39,n:"半价"},saver:{p:null,n:"不覆盖"},
+    stp:{p:0,n:"STP 全免！"},hfc:{p:39,n:"半价"},saver:{p:"incl",n:"日票含 (船+齿轨+缆车全部覆盖)"},
     tt:[{t:"09:12",e:"—",tr:"船+齿轨"},{t:"10:12",e:"—",tr:"船+齿轨"},{t:"11:12",e:"—",tr:"船+齿轨"}],
     note:"经典环线：船到 Vitznau → 齿轨上 Rigi Kulm → 缆车下到 Weggis → 船回。",tip:"STP 全免！Rigi 是 STP 价值最高的山。"},
   "lucerne-pilatus":{dur:"5-6h 环线",durN:300,mode:"cable",type:"船+齿轨+缆车",freq:"每日数班",price:108,unit:"金色环游",isReturn:true,
@@ -555,11 +610,11 @@ const ROUTES = {
     stp:{p:0,n:"STP 全免"},hfc:{p:34,n:"半价"},saver:{p:29,n:"早鸟价"},
     tt:[{t:"07:00",e:"09:40",tr:"IC+IC"},{t:"08:00",e:"10:40",tr:"IC+IC"}],note:"经 Bern + Lausanne。",tip:"如果从 GVA 进出，最后一段。"},
   "spiez-oeschinensee":{dur:"30 min",durN:30,mode:"train",type:"RE",freq:"每30分钟",price:10,
-    stp:{p:0,n:"STP 全免"},hfc:{p:5,n:"半价"},saver:{p:null,n:"含"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:5,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"10:40",e:"11:10",tr:"RE"},{t:"11:10",e:"11:40",tr:"RE"}],
     note:"Spiez → Kandersteg RE 约 30 分钟。",tip:"从 Kandersteg 站步行/接驳 15 min 到缆车。缆车 2026 起需预约时段。"},
   "oeschinensee-zermatt":{dur:"2h45",durN:165,mode:"train",type:"RE+MGB",freq:"每小时",price:52,
-    stp:{p:0,n:"STP 全免 (含 MGB)"},hfc:{p:26,n:"半价"},saver:{p:null,n:"含"},
+    stp:{p:0,n:"STP 全免 (含 MGB)"},hfc:{p:26,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"15:25",e:"18:10",tr:"RE+MGB"},{t:"16:25",e:"19:10",tr:"RE+MGB"}],
     note:"Kandersteg → Brig → Zermatt。",tip:"Day 3 厄希嫩湖下山后赶此班，18:10 抵采尔马特看日落。"},
   "zermatt-interlaken":{dur:"2h15",durN:140,mode:"train",type:"MGB+IC",freq:"每小时",price:78,
@@ -589,26 +644,29 @@ function renderDestCheckboxes(){
     const container = document.getElementById(REGION_COLS[region]);
     ids.forEach(id => {
       const d = DESTS[id];
-      const tags = [];
-      if(d.fullDay) tags.push({cls:"time",text:"全天"});
-      else if(d.halfDay) tags.push({cls:"time",text:"半天"});
-      if(d.specialEvening) tags.push({cls:"time",text:"傍晚"});
-      // STP info
-      const firstAttr = d.attractions[0];
-      if(firstAttr){
-        const stpBadge = firstAttr.badges.find(b => b.text.includes("STP"));
-        if(stpBadge) tags.push({cls:"stp",text:stpBadge.text});
-      }
-      if(firstAttr && firstAttr.price > 0) tags.push({cls:"cost",text:`CHF ${firstAttr.price}`});
+      // Build transport rows
+      const trHTML = (d.transports||[]).map(t => {
+        const stpCls = t.stp === '免费' ? 'tr-free' : t.stp.includes('-') ? 'tr-disc' : '';
+        const sdpCls = t.sdp === '含' ? 'tr-free' : 'tr-no';
+        return `<div class="tr-row">
+          <span class="tr-mode">${t.mode}</span>
+          <span class="tr-seg">${t.seg}</span>
+          <span class="tr-badge ${stpCls}">STP ${t.stp}</span>
+          <span class="tr-badge ${sdpCls}">SDP ${t.sdp}</span>
+          ${t.p > 0 ? `<span class="tr-price">CHF ${t.p}</span>` : ''}
+        </div>`;
+      }).join('');
+      
+      const timeTag = d.fullDay ? '全天' : d.specialEvening ? '傍晚' : '半天';
       
       const label = document.createElement('label');
       label.className = 'dest-item';
       label.innerHTML = `
         <input type="checkbox" value="${id}" onchange="updateSelCount()">
-        <div>
-          <div class="name">${d.name} · ${d.cn}</div>
+        <div style="flex:1;min-width:0">
+          <div class="name">${d.name} · ${d.cn} <span class="dest-tag time">${timeTag}</span></div>
           <div class="desc">${d.tag}</div>
-          <div class="tags">${tags.map(t => `<span class="dest-tag ${t.cls}">${t.text}</span>`).join('')}</div>
+          ${trHTML ? `<div class="tr-list">${trHTML}</div>` : ''}
         </div>
       `;
       container.appendChild(label);
@@ -936,8 +994,13 @@ function selectRoute(r){
     {name:"Half Fare Card",sub:"半价卡",price:pCHF(rt.hfc.p),save:`节省 CHF ${full-rt.hfc.p}`,note:rt.hfc.n,
      badge:rt.hfc.p < (rt.stp.p||999) && rt.stp.p > 0 ? 'best' : null},
     {name:"Saver Day Pass",sub:"特惠日票",
-     price:rt.saver.p===null?'<em style="color:var(--muted)">不适用</em>':pCHF(rt.saver.p),
-     save:rt.saver.p===null?'—':`节省 CHF ${full-rt.saver.p}`,note:rt.saver.n}
+     price:rt.saver.p===null?'<em style="color:var(--muted)">不适用</em>'
+       :rt.saver.p==="incl"?'<span style="color:var(--green);font-size:14px;font-weight:500">日票含</span>'
+       :pCHF(rt.saver.p),
+     save:rt.saver.p===null?'—'
+       :rt.saver.p==="incl"?'<span class="pct">全天无限</span>'
+       :`节省 CHF ${full-rt.saver.p}`,
+     note:rt.saver.n}
   ];
   document.getElementById('priceBody').innerHTML = prices.map(p => `
     <tr>
