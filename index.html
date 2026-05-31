@@ -210,6 +210,29 @@ header .spacer{flex:1}
 /* Footer */
 footer{padding:28px;text-align:center;font-size:11px;color:var(--muted);line-height:1.6}
 
+/* Cost comparison */
+.cost-wrap{padding:28px;border-bottom:1px solid var(--rule);background:var(--paper)}
+.cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--rule);background:#fdfbf6;max-width:1400px;margin:0 auto}
+@media(max-width:900px){.cost-grid{grid-template-columns:1fr}}
+.cost-col{padding:28px 24px;border-right:1px solid var(--rule);position:relative}
+.cost-col:last-child{border-right:none}
+@media(max-width:900px){.cost-col{border-right:none;border-bottom:1px solid var(--rule)}.cost-col:last-child{border-bottom:none}}
+.cost-col.best{background:#fff}
+.cost-col.best::before{content:"推荐";position:absolute;top:-1px;left:-1px;background:var(--red);color:#fff;padding:4px 10px;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:0.18em}
+.cost-col-name{font-family:"Fraunces",serif;font-size:22px;font-weight:500;margin-bottom:4px}
+.cost-col-sub{font-size:11px;color:var(--muted);font-style:italic;font-family:"Fraunces",serif;margin-bottom:16px}
+.cost-total{font-family:"Fraunces",serif;font-size:42px;font-weight:500;color:var(--red-deep);letter-spacing:-0.02em;line-height:1;margin-bottom:4px}
+.cost-total .chf{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--muted);font-weight:400;vertical-align:6px;margin-right:4px}
+.cost-save{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--green);font-weight:600;margin-bottom:18px}
+.cost-breakdown{list-style:none;font-size:12px;line-height:1.7;border-top:1px solid rgba(0,0,0,0.1);padding-top:14px}
+.cost-breakdown li{display:flex;justify-content:space-between;padding:3px 0}
+.cost-breakdown li .k{color:var(--muted)}
+.cost-breakdown li .v{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:11px}
+.cost-breakdown li.subtotal{border-top:1px solid rgba(0,0,0,0.1);margin-top:6px;padding-top:8px;font-weight:600}
+.cost-breakdown li.pass-cost{color:var(--blue)}
+.cost-note{max-width:1400px;margin:20px auto 0;padding:20px 24px;background:#fdfbf6;border:1px solid var(--rule);font-size:12.5px;line-height:1.7;color:#333}
+.cost-note strong{color:var(--red-deep)}
+
 /* Empty state */
 .empty-state{text-align:center;padding:80px 28px;color:var(--muted)}
 .empty-state .icon{font-size:48px;margin-bottom:16px}
@@ -361,6 +384,18 @@ footer{padding:28px;text-align:center;font-size:11px;color:var(--muted);line-hei
       </div>
     </div>
   </section>
+
+  <!-- COST COMPARISON -->
+  <div class="section-rule">
+    <span class="num">IV.</span>
+    <span class="title">总费用对比</span>
+    <span class="spacer"></span>
+    <span class="label">哪种通票最划算？</span>
+  </div>
+  <section class="cost-wrap" id="costSection">
+    <div class="cost-grid" id="costGrid"></div>
+    <div class="cost-note" id="costNote"></div>
+  </section>
 </div>
 
 <div class="empty-state" id="emptyState">
@@ -492,11 +527,12 @@ const DESTS = {
       {name:"湖上划船 (1h)",price:30,badges:[]},
       {name:"夏季滑道 Rodelbahn",price:9,badges:[]}
     ]},
-  zermatt:     {name:"Zermatt",cn:"采尔马特",region:"valais",mx:232,my:455,halfDay:true,specialEvening:true,
-    tag:"马特宏峰 · 7月底21:00日落",
+  zermatt:     {name:"Zermatt",cn:"采尔马特",region:"valais",mx:232,my:455,fullDay:true,
+    tag:"马特宏峰 · Gornergrat 齿轨上山",
     transports:[
       {mode:"火车",seg:"因特拉肯→Visp",stp:"免费",sdp:"含",p:44},
-      {mode:"窄轨",seg:"Visp→Zermatt (MGB)",stp:"免费",sdp:"含",p:34}
+      {mode:"窄轨",seg:"Visp→Zermatt (MGB)",stp:"免费",sdp:"含",p:34},
+      {mode:"齿轨",seg:"Zermatt→Gornergrat (上山看马特宏峰)",stp:"-50%",sdp:"不含",p:132}
     ],
     attractions:[
       {name:"教堂桥 + Bahnhofstrasse",price:0,badges:[{type:"free",text:"免费"}]},
@@ -539,23 +575,23 @@ const ROUTES = {
     tt:[{t:"06:04",e:"06:45",tr:"IR 70"},{t:"06:35",e:"07:16",tr:"IR 70"},{t:"07:04",e:"07:45",tr:"IR 70"},{t:"07:35",e:"08:16",tr:"IR 70"}],
     note:"每小时 04 分和 35 分发车，瑞士最繁忙城际线之一。",tip:"苏黎世 HB → 卢塞恩直达，无需换乘。"},
   "zurich-bern":{dur:"58 min",durN:58,mode:"train",type:"IC 1",freq:"每30分钟",price:51,
-    stp:{p:0,n:"STP 全免"},hfc:{p:26,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:26,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"06:02",e:"07:00",tr:"IC 1"},{t:"06:32",e:"07:28",tr:"IC 1"},{t:"07:02",e:"08:00",tr:"IC 1"}],
     note:"IC 1 每 30 分钟一班。",tip:"双层车厢，无需预订。"},
   "zurich-interlaken":{dur:"2h05",durN:125,mode:"train",type:"IC 6",freq:"每小时",price:72,
-    stp:{p:0,n:"STP 全免"},hfc:{p:36,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:36,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"07:00",e:"09:05",tr:"IC 6"},{t:"08:00",e:"10:05",tr:"IC 6"},{t:"09:00",e:"11:05",tr:"IC 6"}],
     note:"经 Bern + Spiez，无需换乘。",tip:"2 小时直达，比经卢塞恩更快。"},
   "lucerne-interlaken":{dur:"1h50",durN:110,mode:"train",type:"IR 25",freq:"每2小时",price:34,
-    stp:{p:0,n:"STP 全免"},hfc:{p:17,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:17,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"07:06",e:"08:55",tr:"IR 25"},{t:"09:06",e:"10:55",tr:"IR 25"},{t:"11:06",e:"12:55",tr:"IR 25"}],
     note:"班次较少，每 2 小时一班。金色山口快线段。",tip:"景观列车，沿四森林湖与 Brünig 山口行驶。"},
-  "interlaken-grindelwaldFirst":{dur:"1h",durN:60,mode:"cable",type:"S3 + Firstbahn",freq:"每30分钟",price:76,unit:"缆车往返",isReturn:true,
-    stp:{p:38,n:"STP 50% 折扣"},hfc:{p:38,n:"HFC 半价"},saver:{p:null,n:"不覆盖缆车"},
+  "interlaken-grindelwaldFirst":{dur:"1h",durN:60,mode:"cable",type:"S3 + Firstbahn",freq:"每30分钟",price:88,unit:"火车+缆车往返",isReturn:true,
+    stp:{p:38,n:"火车免费 + 缆车 50% 折扣"},hfc:{p:44,n:"火车半价 6 + 缆车半价 38"},saver:{p:null,n:"火车含 · 缆车不覆盖 (需另买 76)",extra:38},
     tt:[{t:"08:05",e:"09:00",tr:"S3+缆车"},{t:"09:05",e:"10:00",tr:"S3+缆车"},{t:"10:05",e:"11:00",tr:"S3+缆车"}],
     note:"火车 35 min + 缆车每 5-10 min 一缆。",tip:"建议 09:00 前上山，赶在云雾前。Cliff Walk 含在票里。"},
   "interlaken-jungfraujoch":{dur:"2h 一程",durN:120,mode:"cog",type:"S3+JB/EigerEx",freq:"每30分钟",price:262,unit:"往返",isReturn:true,
-    stp:{p:196,n:"Interlaken→Wengen 免费，上山段25%折扣"},hfc:{p:131,n:"全程50%折扣 — 最划算"},saver:{p:null,n:"不覆盖上山段"},
+    stp:{p:196,n:"Interlaken→Wengen 免费，上山段25%折扣"},hfc:{p:131,n:"全程50%折扣 — 最划算"},saver:{p:null,n:"不覆盖上山段",extra:131},
     tt:[{t:"07:35",e:"09:47",tr:"S3+JB"},{t:"08:05",e:"10:17",tr:"EigerEx"},{t:"08:35",e:"10:47",tr:"S3+JB"}],
     note:"5-10 月需强制预订座位 (CHF 10)。",tip:"STP 只给 25% 折扣 (私营齿轨段)。HFC 50% 折扣更划算。"},
   "interlaken-lauterbrunnen":{dur:"20 min",durN:20,mode:"train",type:"S3",freq:"每30分钟",price:8,
@@ -565,31 +601,31 @@ const ROUTES = {
     stp:{p:0,n:"STP 全免"},hfc:{p:7,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"09:00",e:"09:20",tr:"IC 6"},{t:"09:15",e:"09:35",tr:"IC 8"},{t:"09:30",e:"09:50",tr:"IC 6"}],
     note:"每 15 分钟一班，沿图恩湖南岸。",tip:"Spiez 老城在车站下方 5 分钟步行。"},
-  "interlaken-oeschinensee":{dur:"1h",durN:60,mode:"train",type:"IC+RE (经Spiez)",freq:"每30分钟",price:21,
-    stp:{p:0,n:"火车全免 + 缆车半价18"},hfc:{p:11,n:"火车半价 + 缆车半价18"},saver:{p:"incl",n:"日票含火车段 · 缆车不覆盖需另买"},
+  "interlaken-oeschinensee":{dur:"1h",durN:60,mode:"train",type:"IC+RE (经Spiez)",freq:"每30分钟",price:57,unit:"火车+缆车往返",
+    stp:{p:18,n:"火车免费 + 缆车 50% 折扣 18"},hfc:{p:29,n:"火车半价 11 + 缆车半价 18"},saver:{p:null,n:"火车含 · 缆车不覆盖 (需另买 36)",extra:18},
     tt:[{t:"08:04",e:"09:07",tr:"IC+RE"},{t:"09:04",e:"10:07",tr:"IC+RE"}],
     note:"Spiez 换乘一次，4-6 分钟。",tip:"2026 年起缆车必须提前预约时段。"},
-  "interlaken-schynigePlatte":{dur:"1h15",durN:75,mode:"cog",type:"S3+SPB蒸汽车",freq:"每40分钟",price:72,unit:"齿轨往返",isReturn:true,
-    stp:{p:36,n:"STP 50% 折扣 (非全免)"},hfc:{p:36,n:"HFC 半价"},saver:{p:null,n:"不覆盖齿轨"},
+  "interlaken-schynigePlatte":{dur:"1h15",durN:75,mode:"cog",type:"S3+SPB蒸汽车",freq:"每40分钟",price:76,unit:"火车+齿轨往返",isReturn:true,
+    stp:{p:36,n:"火车免费 + 齿轨 50% 折扣 36"},hfc:{p:38,n:"火车半价 2 + 齿轨半价 36"},saver:{p:null,n:"火车含 · 齿轨不覆盖 (需另买 72)",extra:36},
     tt:[{t:"08:26",e:"09:46",tr:"SPB"},{t:"09:06",e:"10:26",tr:"SPB"},{t:"09:46",e:"11:06",tr:"SPB"}],
     note:"仅 6 月 – 10 月运行。1893 年蒸汽齿轨。",tip:"山顶看 Eiger/Mönch/Jungfrau 三连峰。STP 50% 折扣，不是全免。"},
   "interlaken-harderKulm":{dur:"10 min",durN:10,mode:"cable",type:"Harderbahn",freq:"每15分钟",price:44,unit:"缆车往返",isReturn:true,
-    stp:{p:22,n:"STP 50% 折扣"},hfc:{p:22,n:"HFC 半价"},saver:{p:null,n:"不覆盖"},
+    stp:{p:22,n:"STP 50% 折扣"},hfc:{p:22,n:"HFC 半价"},saver:{p:null,n:"不覆盖",extra:22},
     tt:[{t:"09:10",e:"09:20",tr:"缆车"},{t:"09:30",e:"09:40",tr:"缆车"},{t:"10:00",e:"10:10",tr:"缆车"}],
     note:"就在因特拉肯东站旁 2 分钟步行。",tip:"双湖桥 + Eiger 全景，Day 4 轻松半天首选。"},
-  "interlaken-zermatt":{dur:"2h15-25",durN:140,mode:"train",type:"IC+IC+MGB",freq:"每小时",price:78,
-    stp:{p:0,n:"STP 全免 (含 MGB)"},hfc:{p:39,n:"半价"},saver:{p:29,n:"早鸟价"},
+  "interlaken-zermatt":{dur:"2h15-25",durN:140,mode:"train",type:"IC+IC+MGB",freq:"每小时",price:210,unit:"火车+Gornergrat齿轨往返",
+    stp:{p:66,n:"火车免费 + Gornergrat 50% 折扣 66"},hfc:{p:105,n:"火车半价 39 + Gornergrat 半价 66"},saver:{p:null,n:"火车含 · Gornergrat 不覆盖 (需另买 132)",extra:66},
     tt:[{t:"13:34",e:"15:50",tr:"IC+MGB"},{t:"14:34",e:"16:50",tr:"IC+MGB"},{t:"21:13",e:"23:30",tr:"末班回程"}],
     note:"经 Spiez + Visp 换乘 2 次。",tip:"7 月底 21:00 日落。看完梨色赶 21:13 末班，约 23:30 到因特拉肯。"},
   "interlaken-bern":{dur:"54 min",durN:54,mode:"train",type:"IC 6",freq:"每30分钟",price:32,
-    stp:{p:0,n:"STP 全免"},hfc:{p:16,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:16,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"07:00",e:"07:54",tr:"IC 6"},{t:"07:30",e:"08:26",tr:"IC 61"},{t:"08:00",e:"08:54",tr:"IC 6"}],
     note:"IC 6 与 IC 61 交替运行。",tip:"沿图恩湖南岸 (Spiez 段景最佳)。"},
   "bern-interlaken":{dur:"54 min",durN:54,mode:"train",type:"IC 6",freq:"每30分钟",price:32,
-    stp:{p:0,n:"STP 全免"},hfc:{p:16,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:16,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"07:00",e:"07:54",tr:"IC 6"},{t:"08:00",e:"08:54",tr:"IC 6"}],note:"同上。",tip:"同上。"},
   "bern-zurich":{dur:"58 min",durN:58,mode:"train",type:"IC 1",freq:"每30分钟",price:51,
-    stp:{p:0,n:"STP 全免"},hfc:{p:26,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:26,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"13:00",e:"13:56",tr:"IC 1"},{t:"14:00",e:"14:56",tr:"IC 1"},{t:"15:00",e:"15:56",tr:"IC 1"}],
     note:"双层 IC 1。",tip:"Zürich HB → 机场再坐 10 min S-Bahn (STP 含)。"},
   "lucerne-rigi":{dur:"2h 环线",durN:120,mode:"boat",type:"船+齿轨+缆车",freq:"每小时",price:78,unit:"环线全套",isReturn:true,
@@ -597,32 +633,32 @@ const ROUTES = {
     tt:[{t:"09:12",e:"—",tr:"船+齿轨"},{t:"10:12",e:"—",tr:"船+齿轨"},{t:"11:12",e:"—",tr:"船+齿轨"}],
     note:"经典环线：船到 Vitznau → 齿轨上 Rigi Kulm → 缆车下到 Weggis → 船回。",tip:"STP 全免！Rigi 是 STP 价值最高的山。"},
   "lucerne-pilatus":{dur:"5-6h 环线",durN:300,mode:"cable",type:"船+齿轨+缆车",freq:"每日数班",price:108,unit:"金色环游",isReturn:true,
-    stp:{p:54,n:"STP 50% 折扣"},hfc:{p:54,n:"半价"},saver:{p:null,n:"不覆盖"},
+    stp:{p:54,n:"STP 50% 折扣"},hfc:{p:54,n:"半价"},saver:{p:null,n:"不覆盖",extra:54},
     tt:[{t:"09:00",e:"—",tr:"船出发"},{t:"10:00",e:"—",tr:"船出发"}],
     note:"Golden Round Trip: 船→齿轨→山顶→缆车→巴士回。",tip:"世界最陡齿轨铁路 (48% 坡度)。"},
   "geneva-zurich":{dur:"2h45",durN:165,mode:"train",type:"IC 1",freq:"每30分钟",price:88,
-    stp:{p:0,n:"STP 全免"},hfc:{p:44,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:44,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"06:34",e:"09:20",tr:"IC 1"},{t:"07:04",e:"09:50",tr:"IC 1"}],note:"经 Lausanne + Bern。",tip:"沿日内瓦湖北岸葡萄园。"},
   "bern-geneva":{dur:"1h45",durN:105,mode:"train",type:"IC 1",freq:"每30分钟",price:56,
-    stp:{p:0,n:"STP 全免"},hfc:{p:28,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:28,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"07:34",e:"09:20",tr:"IC 1"},{t:"08:04",e:"09:50",tr:"IC 5"}],note:"双层 IC。",tip:"沿日内瓦湖北岸。"},
   "interlaken-geneva":{dur:"2h40",durN:160,mode:"train",type:"IC 6+IC 1",freq:"每小时",price:68,
-    stp:{p:0,n:"STP 全免"},hfc:{p:34,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:34,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"07:00",e:"09:40",tr:"IC+IC"},{t:"08:00",e:"10:40",tr:"IC+IC"}],note:"经 Bern + Lausanne。",tip:"如果从 GVA 进出，最后一段。"},
-  "spiez-oeschinensee":{dur:"30 min",durN:30,mode:"train",type:"RE",freq:"每30分钟",price:10,
-    stp:{p:0,n:"STP 全免"},hfc:{p:5,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
+  "spiez-oeschinensee":{dur:"30 min",durN:30,mode:"train",type:"RE + 缆车",freq:"每30分钟",price:46,unit:"火车+缆车往返",
+    stp:{p:18,n:"火车免费 + 缆车 50% 折扣 18"},hfc:{p:23,n:"火车半价 5 + 缆车半价 18"},saver:{p:null,n:"火车含 · 缆车不覆盖 (需另买 36)",extra:18},
     tt:[{t:"10:40",e:"11:10",tr:"RE"},{t:"11:10",e:"11:40",tr:"RE"}],
     note:"Spiez → Kandersteg RE 约 30 分钟。",tip:"从 Kandersteg 站步行/接驳 15 min 到缆车。缆车 2026 起需预约时段。"},
-  "oeschinensee-zermatt":{dur:"2h45",durN:165,mode:"train",type:"RE+MGB",freq:"每小时",price:52,
-    stp:{p:0,n:"STP 全免 (含 MGB)"},hfc:{p:26,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
+  "oeschinensee-zermatt":{dur:"2h45",durN:165,mode:"train",type:"RE+MGB+齿轨",freq:"每小时",price:184,unit:"火车+Gornergrat齿轨往返",
+    stp:{p:66,n:"火车免费 + Gornergrat 50% 折扣 66"},hfc:{p:92,n:"火车半价 26 + Gornergrat 半价 66"},saver:{p:null,n:"火车含 · Gornergrat 不覆盖 (需另买 132)",extra:66},
     tt:[{t:"15:25",e:"18:10",tr:"RE+MGB"},{t:"16:25",e:"19:10",tr:"RE+MGB"}],
     note:"Kandersteg → Brig → Zermatt。",tip:"Day 3 厄希嫩湖下山后赶此班，18:10 抵采尔马特看日落。"},
   "zermatt-interlaken":{dur:"2h15",durN:140,mode:"train",type:"MGB+IC",freq:"每小时",price:78,
-    stp:{p:0,n:"STP 全免"},hfc:{p:39,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免"},hfc:{p:39,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"21:13",e:"23:30",tr:"末班"},{t:"22:06",e:"00:32",tr:"末班B"}],
     note:"经 Visp + Spiez 换乘。",tip:"看完梨色赶 21:13，约 23:30 回因特拉肯。"},
   "interlaken-zurich":{dur:"2h30",durN:150,mode:"train",type:"IC 6+IC 1+S",freq:"每30分钟",price:79,
-    stp:{p:0,n:"STP 全免 (含 S-Bahn)"},hfc:{p:40,n:"半价"},saver:{p:29,n:"早鸟价"},
+    stp:{p:0,n:"STP 全免 (含 S-Bahn)"},hfc:{p:40,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"13:34",e:"16:20",tr:"IC+IC+S"},{t:"14:04",e:"16:50",tr:"IC+IC+S"},{t:"14:34",e:"17:20",tr:"IC+IC+S"}],
     note:"经 Spiez → Bern → Zürich HB → 机场。",tip:"建议 14:04 班次，16:50 到机场，给 20:00 飞机留 3h。"},
 };
@@ -797,60 +833,73 @@ function generateItinerary(){
   lastDay.title = lastDay.stops.filter(s=>!s.transit).map(s => DESTS[s.id]?.cn||s.id).join(' + ') + ' → 机场';
   days.push(lastDay);
   
-  // Build route list from day plans — chain stops within each day
+  // Build route list — smart chaining with hub fallback
   const routes = [];
+  const hubs = ['lucerne','interlaken','bern','spiez']; // common transfer cities
+  
+  function addRouteSegment(from, to, dayLabel, ord){
+    if(from === to) return to;
+    const r = findRoute(from, to);
+    if(r){
+      routes.push({from, to, route:r, day:dayLabel, order:ord});
+      return r.isReturn ? from : to; // round-trip: you end up back at departure
+    }
+    for(const hub of [base, ...hubs]){
+      if(hub === from || hub === to) continue;
+      const r1 = findRoute(from, hub);
+      const r2 = findRoute(hub, to);
+      if(r1 && r2){
+        routes.push({from, to:hub, route:r1, day:dayLabel, order:ord});
+        routes.push({from:hub, to, route:r2, day:dayLabel, order:ord+0.5});
+        return r2.isReturn ? hub : to;
+      }
+    }
+    return from;
+  }
+  
   days.forEach((day, di) => {
     const stops = day.stops.map(s => s.id);
+    let ord = di * 10;
     
     if(di === 0){
       // Day 1: entry → stops → base
-      const chain = [entry === 'zurich' ? 'zurich' : 'geneva', ...stops];
-      if(!chain.includes(base)) chain.push(base);
-      for(let i=0; i<chain.length-1; i++){
-        const from=chain[i], to=chain[i+1];
-        if(from===to) continue;
-        const route = findRoute(from,to);
-        if(route) routes.push({from,to,route,day:day.label,order:di*10+i});
+      const entryCity = entry === 'zurich' ? 'zurich' : 'geneva';
+      let current = entryCity;
+      for(const stop of stops){
+        if(stop === current) continue;
+        current = addRouteSegment(current, stop, day.label, ord++);
       }
+      if(current !== base) addRouteSegment(current, base, day.label, ord++);
+      
     } else if(di === days.length-1){
-      // Last day: base → stops → entry (airport)
-      const chain = [];
-      stops.forEach(s => {if(!s.includes('机场') && s!==entry) chain.push(s);});
-      // Route from base to first activity
-      if(chain.length > 0){
-        const r = findRoute(base, chain[0]);
-        if(r) routes.push({from:base, to:chain[0], route:r, day:day.label, order:di*10});
+      // Last day: base → activities → airport
+      let current = base;
+      for(const stop of stops){
+        if(stop === current || stop === entry) continue;
+        current = addRouteSegment(current, stop, day.label, ord++);
       }
-      // Chain between activities
-      for(let i=0; i<chain.length-1; i++){
-        const r = findRoute(chain[i], chain[i+1]);
-        if(r) routes.push({from:chain[i], to:chain[i+1], route:r, day:day.label, order:di*10+i+1});
+      // Return to base if needed (round-trip activities return automatically)
+      if(current !== base){
+        const lastR = findRoute(current, base);
+        if(lastR && !lastR.isReturn) addRouteSegment(current, base, day.label, ord++);
       }
-      // Last activity (or base) to airport
-      const lastStop = chain.length > 0 ? chain[chain.length-1] : base;
-      const returnKey = `${base}-${entry === 'zurich' ? 'zurich' : 'geneva'}`;
-      const retRoute = findRoute(base, entry === 'zurich' ? 'zurich' : 'geneva');
-      if(retRoute) routes.push({from:base, to:entry==='zurich'?'zurich':'geneva', route:retRoute, day:day.label, order:di*10+9});
+      // Base to airport
+      const airport = entry === 'zurich' ? 'zurich' : 'geneva';
+      addRouteSegment(base, airport, day.label, ord++);
+      
     } else {
-      // Middle days: base → stop1 → stop2 → ... → (back to base implied)
-      const chain = [...stops];
-      // First: base → first stop
-      if(chain.length > 0){
-        const r = findRoute(base, chain[0]);
-        if(r) routes.push({from:base, to:chain[0], route:r, day:day.label, order:di*10});
+      // Middle days: base → stops → base
+      let current = base;
+      let lastWasRoundTrip = false;
+      for(const stop of stops){
+        if(stop === current) continue;
+        const r = findRoute(current, stop);
+        lastWasRoundTrip = r && r.isReturn;
+        current = addRouteSegment(current, stop, day.label, ord++);
       }
-      // Between stops
-      for(let i=0; i<chain.length-1; i++){
-        const r = findRoute(chain[i], chain[i+1]);
-        if(r) routes.push({from:chain[i], to:chain[i+1], route:r, day:day.label, order:di*10+i+1});
-      }
-      // If last stop is far from base (e.g. Zermatt), add return route
-      const lastStop = chain[chain.length-1];
-      if(lastStop && lastStop !== base){
-        const retRoute = findRoute(lastStop, base);
-        if(retRoute && lastStop !== chain[0]) {
-          routes.push({from:lastStop, to:base, route:retRoute, day:day.label, order:di*10+chain.length+1});
-        }
+      // Return to base — but skip if last route was a round-trip (return already included in price)
+      if(current !== base && !lastWasRoundTrip){
+        addRouteSegment(current, base, day.label, ord++);
       }
     }
   });
@@ -860,6 +909,7 @@ function generateItinerary(){
   renderMap(days, routes);
   renderRouteList(routes);
   if(routes.length > 0) selectRoute(routes[0]);
+  renderCostComparison(routes, numDays);
   
   document.getElementById('results').classList.add('show');
   document.getElementById('emptyState').style.display = 'none';
@@ -1048,6 +1098,127 @@ function getModeLabel(m){
 function handleCityClick(id){
   const r = currentRoutes.find(r => r.to === id) || currentRoutes.find(r => r.from === id);
   if(r) selectRouteByIdx(currentRoutes.indexOf(r));
+}
+
+/* ==========================================================================
+   COST COMPARISON
+   ========================================================================== */
+function renderCostComparison(routes, numDays){
+  const STP_PRICES = {3:254, 4:309, 5:399, 6:399};
+  const stpPass = STP_PRICES[numDays] || 309;
+  const hfcPass = 150;
+  const saverPerDay = 52; // without HFC
+  const saverPerDayHFC = 29; // with HFC early bird
+  
+  // Calculate segment costs for each option
+  let totalFull = 0, totalSTP = 0, totalHFC = 0;
+  const fullBreakdown = [], stpBreakdown = [], hfcBreakdown = [];
+  
+  routes.forEach(r => {
+    const rt = r.route;
+    const from = DESTS[r.from], to = DESTS[r.to];
+    const label = `${from?.cn||r.from}→${to?.cn||r.to}`;
+    const full = rt.price || 0;
+    
+    // Full price
+    totalFull += full;
+    if(full > 0) fullBreakdown.push({k:label, v:full});
+    
+    // STP price
+    const stpP = rt.stp.p === 0 ? 0 : (rt.stp.p || full);
+    totalSTP += stpP;
+    stpBreakdown.push({k:label, v:stpP, free:stpP===0});
+    
+    // HFC price  
+    const hfcP = rt.hfc.p || Math.round(full/2);
+    totalHFC += hfcP;
+    hfcBreakdown.push({k:label, v:hfcP});
+  });
+  
+  // Option 1: No pass
+  const opt1Total = totalFull;
+  
+  // Option 2: STP
+  const opt2Total = stpPass + totalSTP;
+  
+  // Option 3: HFC + Saver Day Pass (early bird)
+  // Saver covers train segments, so we only add HFC-discounted cable car costs
+  let hfcCableExtra = 0;
+  const hfcSaverBreakdown = [];
+  routes.forEach(r => {
+    const rt = r.route;
+    const from = DESTS[r.from], to = DESTS[r.to];
+    const label = `${from?.cn||r.from}→${to?.cn||r.to}`;
+    
+    if(rt.saver.p === null){
+      // Not fully covered by Saver — use saverExtra (only cable car/cog at HFC price)
+      const extra = rt.saver.extra || rt.hfc.p || Math.round(rt.price/2);
+      hfcCableExtra += extra;
+      hfcSaverBreakdown.push({k:`${label} (缆车/齿轨半价)`, v:extra});
+    }
+    // If covered by Saver ("incl" or number), no extra cost for this segment
+  });
+  const saverDays = numDays; // 每天都有移动，每天都需要一张
+  const opt3Total = hfcPass + (saverPerDayHFC * saverDays) + hfcCableExtra;
+  
+  // Determine best option
+  const minCost = Math.min(opt1Total, opt2Total, opt3Total);
+  
+  // Helper: compare to no-pass baseline
+  function vsFull(total){
+    const diff = opt1Total - total;
+    if(total === minCost) return '最便宜 ✓';
+    if(diff > 0) return `比无通票省 CHF ${diff}`;
+    if(diff < 0) return `比无通票多花 CHF ${-diff}`;
+    return '与无通票相同';
+  }
+  
+  const grid = document.getElementById('costGrid');
+  grid.innerHTML = `
+    <div class="cost-col${opt1Total===minCost?' best':''}">
+      <div class="cost-col-name">无任何通票</div>
+      <div class="cost-col-sub">每次单独买票</div>
+      <div class="cost-total"><span class="chf">CHF</span>${opt1Total}</div>
+      <div class="cost-save">${opt1Total===minCost?'最便宜 ✓':'多花 CHF '+(opt1Total-minCost)}</div>
+      <ul class="cost-breakdown">
+        ${fullBreakdown.map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
+        <li class="subtotal"><span class="k">合计</span><span class="v">CHF ${opt1Total}</span></li>
+      </ul>
+    </div>
+    <div class="cost-col${opt2Total===minCost?' best':''}">
+      <div class="cost-col-name">Swiss Travel Pass</div>
+      <div class="cost-col-sub">${numDays} 日 · 2 等舱</div>
+      <div class="cost-total"><span class="chf">CHF</span>${opt2Total}</div>
+      <div class="cost-save">${vsFull(opt2Total)}</div>
+      <ul class="cost-breakdown">
+        <li class="pass-cost"><span class="k">STP ${numDays}日通票</span><span class="v">${stpPass}</span></li>
+        ${stpBreakdown.filter(b=>b.v>0).map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
+        ${stpBreakdown.filter(b=>b.free).length > 0 ? `<li><span class="k" style="color:var(--green)">${stpBreakdown.filter(b=>b.free).length} 段交通全免</span><span class="v" style="color:var(--green)">0</span></li>` : ''}
+        <li class="subtotal"><span class="k">合计</span><span class="v">CHF ${opt2Total}</span></li>
+      </ul>
+    </div>
+    <div class="cost-col${opt3Total===minCost?' best':''}">
+      <div class="cost-col-name">半价卡 + Saver 早鸟</div>
+      <div class="cost-col-sub">HFC + ${saverDays} 张 Saver Day Pass</div>
+      <div class="cost-total"><span class="chf">CHF</span>${opt3Total}</div>
+      <div class="cost-save">${vsFull(opt3Total)}${opt3Total===minCost?' (需提前抢)':''}</div>
+      <ul class="cost-breakdown">
+        <li class="pass-cost"><span class="k">Half Fare Card</span><span class="v">${hfcPass}</span></li>
+        <li class="pass-cost"><span class="k">Saver Day Pass ×${saverDays} (早鸟)</span><span class="v">${saverPerDayHFC * saverDays}</span></li>
+        ${hfcSaverBreakdown.map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
+        <li class="subtotal"><span class="k">合计</span><span class="v">CHF ${opt3Total}</span></li>
+      </ul>
+    </div>
+  `;
+  
+  // Note
+  document.getElementById('costNote').innerHTML = `
+    <strong>说明：</strong>
+    「无任何通票」= 每段单独在 SBB App 买票原价。
+    「STP」= Swiss Travel Pass ${numDays} 日 CHF ${stpPass}，火车/巴士/游船全免，部分缆车/齿轨 25-50% 折扣，500+ 博物馆免费。
+    「半价卡 + Saver 早鸟」= Half Fare Card CHF 150 (一个月有效) + 每天一张 Saver Day Pass (持 HFC 早鸟价 CHF ${saverPerDayHFC})，火车段日票含，缆车/齿轨用 HFC 半价另买。
+    <strong>注意：</strong>Saver Day Pass 早鸟价需提前 4-6 个月抢，旺季 7-8 月可能只买到 CHF 39-59 档。以上计算按最低早鸟价 CHF ${saverPerDayHFC} 估算。
+  `;
 }
 
 // Init
