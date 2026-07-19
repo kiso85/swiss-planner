@@ -105,7 +105,13 @@ header .spacer{flex:1}
 .map-card{border:1px solid var(--rule);background:#f8f5ee;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 340px;max-width:1400px;margin:0 auto}
 @media(max-width:900px){.map-card{grid-template-columns:1fr}}
 .map-stage{position:relative;aspect-ratio:16/11;overflow:hidden;background:radial-gradient(ellipse at 30% 70%,rgba(29,53,87,0.05),transparent 50%),#f1ede2}
-.map-svg{position:absolute;inset:0;width:100%;height:100%}
+.map-svg{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+.map-svg:active{cursor:grabbing}
+.zoom-controls{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:5px;z-index:20}
+.zoom-btn{width:30px;height:30px;background:rgba(248,245,238,0.95);border:1px solid var(--rule);border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .15s;line-height:1;user-select:none}
+.zoom-btn:hover{background:var(--paper-deep)}
+.zoom-btn.reset{font-size:11px;letter-spacing:0.05em}
+.zoom-hint{position:absolute;top:12px;left:12px;background:rgba(248,245,238,0.9);border:1px solid var(--rule);padding:3px 8px;font-family:"JetBrains Mono",monospace;font-size:8.5px;color:var(--muted);letter-spacing:0.05em;z-index:20;pointer-events:none;border-radius:2px}
 .map-side{border-left:1px solid var(--rule);background:var(--paper);display:flex;flex-direction:column;max-height:560px}
 @media(max-width:900px){.map-side{border-left:none;border-top:1px solid var(--rule);max-height:none}}
 .map-side-head{padding:14px 18px;border-bottom:1px solid var(--rule)}
@@ -321,15 +327,23 @@ footer{padding:28px;text-align:center;font-size:11px;color:var(--muted);line-hei
     <div class="map-card">
       <div class="map-stage">
         <svg class="map-svg" viewBox="0 0 800 550" xmlns="http://www.w3.org/2000/svg" id="mapSvg">
-          <g class="topo-bg" opacity="0.5">
-            <path class="map-bg-path" d="M50 80Q200 60 380 90T780 70"/><path class="map-bg-path" d="M30 130Q200 100 400 130T780 110"/>
-            <path class="map-bg-path" d="M20 180Q200 150 420 175T780 155"/><path class="map-bg-path" d="M10 240Q200 200 440 230T780 210"/>
-            <path class="map-bg-path" d="M10 310Q200 280 460 300T780 280"/>
+          <g id="mapZoomGroup">
+            <g class="topo-bg" opacity="0.5">
+              <path class="map-bg-path" d="M50 80Q200 60 380 90T780 70"/><path class="map-bg-path" d="M30 130Q200 100 400 130T780 110"/>
+              <path class="map-bg-path" d="M20 180Q200 150 420 175T780 155"/><path class="map-bg-path" d="M10 240Q200 200 440 230T780 210"/>
+              <path class="map-bg-path" d="M10 310Q200 280 460 300T780 280"/>
+            </g>
+            <g id="mapLakes"></g>
+            <g id="mapRoutes"></g>
+            <g id="mapCities"></g>
           </g>
-          <g id="mapLakes"></g>
-          <g id="mapRoutes"></g>
-          <g id="mapCities"></g>
         </svg>
+        <div class="zoom-controls">
+          <div class="zoom-btn" onclick="mapZoomIn()" title="放大">+</div>
+          <div class="zoom-btn" onclick="mapZoomOut()" title="缩小">−</div>
+          <div class="zoom-btn reset" onclick="mapZoomReset()" title="重置">⟲</div>
+        </div>
+        <div class="zoom-hint">滚轮/双指缩放 · 拖动平移</div>
         <div class="legend-strip">
           <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div>火车</div>
           <div class="legend-item"><div class="legend-swatch" style="background:var(--teal)"></div>游船</div>
@@ -987,6 +1001,7 @@ function renderItinerary(days){
 }
 
 function renderMap(days, routes){
+  mapZoomReset();
   const lakesG = document.getElementById('mapLakes');
   const routesG = document.getElementById('mapRoutes');
   const citiesG = document.getElementById('mapCities');
@@ -1298,9 +1313,132 @@ function renderCostComparison(routes, numDays){
   `;
 }
 
+/* ==========================================================================
+   MAP ZOOM & PAN
+   ========================================================================== */
+const MAP_ZOOM_MIN = 1, MAP_ZOOM_MAX = 5;
+let mapZoom = {scale:1, x:0, y:0};
+
+function applyMapTransform(){
+  const g = document.getElementById('mapZoomGroup');
+  if(g) g.setAttribute('transform', `translate(${mapZoom.x} ${mapZoom.y}) scale(${mapZoom.scale})`);
+}
+function clampMapPan(){
+  const maxPan = 400 * (mapZoom.scale - 1) + 250;
+  mapZoom.x = Math.max(-maxPan, Math.min(maxPan, mapZoom.x));
+  mapZoom.y = Math.max(-maxPan, Math.min(maxPan, mapZoom.y));
+}
+function mapZoomBy(factor, cx, cy){
+  const newScale = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, mapZoom.scale * factor));
+  if(newScale === mapZoom.scale) return;
+  mapZoom.x = cx - (cx - mapZoom.x) * (newScale / mapZoom.scale);
+  mapZoom.y = cy - (cy - mapZoom.y) * (newScale / mapZoom.scale);
+  mapZoom.scale = newScale;
+  clampMapPan();
+  applyMapTransform();
+}
+function mapZoomIn(){ mapZoomBy(1.4, 400, 275); }
+function mapZoomOut(){ mapZoomBy(1/1.4, 400, 275); }
+function mapZoomReset(){ mapZoom = {scale:1, x:0, y:0}; applyMapTransform(); }
+
+function svgClientToPoint(svg, clientX, clientY){
+  const pt = svg.createSVGPoint();
+  pt.x = clientX; pt.y = clientY;
+  const ctm = svg.getScreenCTM();
+  if(!ctm) return {x:400, y:275};
+  const inv = ctm.inverse();
+  const p = pt.matrixTransform(inv);
+  // Undo current pan/zoom so we get a coordinate in the *unzoomed* 800x550 space
+  return { x: (p.x - mapZoom.x) / mapZoom.scale, y: (p.y - mapZoom.y) / mapZoom.scale };
+}
+
+function initMapZoomControls(){
+  const svg = document.getElementById('mapSvg');
+  if(!svg || svg.dataset.zoomInit) return;
+  svg.dataset.zoomInit = '1';
+
+  // Mouse wheel zoom
+  svg.addEventListener('wheel', function(e){
+    e.preventDefault();
+    const p = svgClientToPoint(svg, e.clientX, e.clientY);
+    const factor = e.deltaY < 0 ? 1.15 : 1/1.15;
+    mapZoomBy(factor, p.x, p.y);
+  }, {passive:false});
+
+  // Mouse drag to pan
+  let isDragging = false, dragStart = {x:0,y:0}, panStart = {x:0,y:0};
+  svg.addEventListener('mousedown', function(e){
+    isDragging = true;
+    dragStart = {x:e.clientX, y:e.clientY};
+    panStart = {x:mapZoom.x, y:mapZoom.y};
+  });
+  window.addEventListener('mousemove', function(e){
+    if(!isDragging) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleFactor = 800 / rect.width;
+    mapZoom.x = panStart.x + (e.clientX - dragStart.x) * scaleFactor;
+    mapZoom.y = panStart.y + (e.clientY - dragStart.y) * scaleFactor;
+    clampMapPan();
+    applyMapTransform();
+  });
+  window.addEventListener('mouseup', function(){ isDragging = false; });
+
+  // Double click to zoom in at point
+  svg.addEventListener('dblclick', function(e){
+    e.preventDefault();
+    const p = svgClientToPoint(svg, e.clientX, e.clientY);
+    mapZoomBy(1.6, p.x, p.y);
+  });
+
+  // Touch: single-finger pan, two-finger pinch zoom
+  let touchStartDist = 0, touchStartScale = 1, touchStartMid = {x:0,y:0}, touchPanStart = {x:0,y:0};
+  svg.addEventListener('touchstart', function(e){
+    if(e.touches.length === 1){
+      isDragging = true;
+      dragStart = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+      panStart = {x:mapZoom.x, y:mapZoom.y};
+    } else if(e.touches.length === 2){
+      isDragging = false;
+      const [t1,t2] = e.touches;
+      touchStartDist = Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+      touchStartScale = mapZoom.scale;
+      const midX = (t1.clientX+t2.clientX)/2, midY = (t1.clientY+t2.clientY)/2;
+      touchStartMid = svgClientToPoint(svg, midX, midY);
+      touchStartMid.x = touchStartMid.x * touchStartScale + mapZoom.x;
+      touchStartMid.y = touchStartMid.y * touchStartScale + mapZoom.y;
+      touchPanStart = {x:mapZoom.x, y:mapZoom.y};
+    }
+  }, {passive:true});
+  svg.addEventListener('touchmove', function(e){
+    if(e.touches.length === 1 && isDragging){
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const scaleFactor = 800 / rect.width;
+      mapZoom.x = panStart.x + (e.touches[0].clientX - dragStart.x) * scaleFactor;
+      mapZoom.y = panStart.y + (e.touches[0].clientY - dragStart.y) * scaleFactor;
+      clampMapPan();
+      applyMapTransform();
+    } else if(e.touches.length === 2){
+      e.preventDefault();
+      const [t1,t2] = e.touches;
+      const dist = Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+      const newScale = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, touchStartScale * (dist/touchStartDist)));
+      const rawMidX = (touchStartMid.x - touchPanStart.x) / touchStartScale;
+      const rawMidY = (touchStartMid.y - touchPanStart.y) / touchStartScale;
+      mapZoom.x = touchStartMid.x - rawMidX * newScale;
+      mapZoom.y = touchStartMid.y - rawMidY * newScale;
+      mapZoom.scale = newScale;
+      clampMapPan();
+      applyMapTransform();
+    }
+  }, {passive:false});
+  svg.addEventListener('touchend', function(){ isDragging = false; });
+}
+
 // Init
 renderDestCheckboxes();
 updateSelCount();
+initMapZoomControls();
 // Add zurich to DESTS if missing
 if(!DESTS.zurich) DESTS.zurich = {name:"Zürich",cn:"苏黎世",mx:610,my:170,region:"central",halfDay:true,tag:"金融之都",attractions:[{name:"老城 + 圣母大教堂",price:5,badges:[]},{name:"瑞士国家博物馆",price:13,badges:[{type:"free",text:"STP 免费"}]}]};
 </script>
