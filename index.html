@@ -496,6 +496,36 @@ const DESTS = {
       {name:"Trümmelbach 冰川瀑布",price:16,badges:[]},
       {name:"Mürren 缆车小镇",price:0,badges:[{type:"free",text:"STP 含"}]}
     ]},
+  wengen:      {name:"Wengen",cn:"文根",region:"oberland",mx:378,my:315,halfDay:true,
+    tag:"少女峰脚下无车小镇 · 观景火车换乘站",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→文根 (经劳特布鲁嫩换乘 WAB 齿轨)",stp:"免费",sdp:"含",p:12}
+    ],
+    attractions:[
+      {name:"无车小镇漫步",price:0,badges:[{type:"free",text:"免费"}]},
+      {name:"Männlichen 缆车 + 全景步道",price:36,badges:[{type:"free",text:"STP 免费"},{type:"half",text:"HFC 半价"}]},
+      {name:"雪朗峰 007 观景台 (需转车)",price:0,badges:[]}
+    ]},
+  muerren:     {name:"Mürren",cn:"米伦",region:"oberland",mx:365,my:322,halfDay:true,
+    tag:"悬崖上的无车小镇 · 雪朗峰 007 观景台起点",
+    transports:[
+      {mode:"缆车",seg:"因特拉肯→米伦 (经劳特布鲁嫩转 BLM 缆车/小火车)",stp:"免费",sdp:"含",p:24}
+    ],
+    attractions:[
+      {name:"无车小镇漫步 + 悬崖全景步道",price:0,badges:[{type:"free",text:"免费"}]},
+      {name:"雪朗峰 Schilthorn 缆车 (007 观景台)",price:106,badges:[{type:"discount",text:"STP -50%"},{type:"half",text:"HFC 半价"}]},
+      {name:"Allmendhubel 缆车 + 花卉步道",price:16,badges:[{type:"free",text:"STP 免费"}]}
+    ]},
+  lungern:     {name:"Lungern",cn:"龙疆",region:"central",mx:465,my:270,halfDay:true,
+    tag:"网红蒂芙尼蓝湖 · 卢塞恩⇄因特拉肯必经小镇",
+    transports:[
+      {mode:"火车",seg:"卢塞恩→龙疆 (Brünig 景观线)",stp:"免费",sdp:"含",p:19}
+    ],
+    attractions:[
+      {name:"龙疆湖畔步道",price:0,badges:[{type:"free",text:"免费"}]},
+      {name:"网红观景点 (S 弯公路)",price:0,badges:[{type:"free",text:"免费"}]},
+      {name:"龙疆教堂观景台",price:0,badges:[{type:"free",text:"免费"}]}
+    ]},
   schynigePlatte:{name:"Schynige Platte",cn:"先伊格",region:"oberland",mx:415,my:340,halfDay:true,
     tag:"百年蒸汽齿轨 + 三连峰",
     transports:[
@@ -599,6 +629,23 @@ const ROUTES = {
   "interlaken-lauterbrunnen":{dur:"20 min",durN:20,mode:"train",type:"S3",freq:"每30分钟",price:8,
     stp:{p:0,n:"STP 全免"},hfc:{p:4,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"频繁",e:"—",tr:"S3"}],note:"S3 列车直达。",tip:"劳特布鲁嫩是 72 条瀑布的起点。"},
+  "interlaken-wengen":{dur:"35 min",durN:35,mode:"cog",type:"S3+WAB",freq:"每30分钟",price:12,
+    stp:{p:0,n:"STP 全免"},hfc:{p:6,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
+    tt:[{t:"09:06",e:"09:41",tr:"S3+WAB"},{t:"09:36",e:"10:11",tr:"S3+WAB"},{t:"10:06",e:"10:41",tr:"S3+WAB"}],
+    note:"因特拉肯东站坐 S3 到劳特布鲁嫩，换乘 WAB 齿轨小火车上文根。",tip:"文根禁止私家车通行，是少女峰地区最宁静的度假小镇之一。"},
+  "interlaken-muerren":{dur:"50 min",durN:50,mode:"cable",type:"S3+BLM缆车/小火车",freq:"每30分钟",price:24,
+    stp:{p:0,n:"STP 全免"},hfc:{p:12,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
+    tt:[{t:"09:06",e:"09:56",tr:"S3+BLM"},{t:"09:36",e:"10:26",tr:"S3+BLM"},{t:"10:06",e:"10:56",tr:"S3+BLM"}],
+    note:"因特拉肯东站坐 S3 到劳特布鲁嫩，转乘缆车上 Grütschalp，再换小火车到米伦。",
+    tip:"米伦是阿尔卑斯山区最高的无车村庄之一，雪朗峰缆车 (007 观景台) 由此出发。"},
+  "lucerne-lungern":{dur:"45 min",durN:45,mode:"train",type:"IR (Brünig景观线)",freq:"每小时",price:19,
+    stp:{p:0,n:"STP 全免"},hfc:{p:10,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
+    tt:[{t:"09:03",e:"09:48",tr:"IR"},{t:"10:03",e:"10:48",tr:"IR"},{t:"11:03",e:"11:48",tr:"IR"}],
+    note:"经典 Brünig 山口景观线，齿轨爬升路段风景绝佳。",tip:"建议在龙疆下车游览 1.5-2 小时，再继续前往因特拉肯或返回卢塞恩。"},
+  "lungern-interlaken":{dur:"35 min",durN:35,mode:"train",type:"IR (Brünig景观线)",freq:"每小时",price:15,
+    stp:{p:0,n:"STP 全免"},hfc:{p:8,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
+    tt:[{t:"11:52",e:"12:27",tr:"IR"},{t:"12:52",e:"13:27",tr:"IR"}],
+    note:"经 Brienz，沿布里恩茨湖畔行驶。",tip:"若时间紧张，也可安排卢塞恩⇄因特拉肯全程约 1h50，中途在龙疆下车稍作停留。"},
   "interlaken-spiez":{dur:"20 min",durN:20,mode:"train",type:"IC 6/8",freq:"每15分钟",price:14,
     stp:{p:0,n:"STP 全免"},hfc:{p:7,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"09:00",e:"09:20",tr:"IC 6"},{t:"09:15",e:"09:35",tr:"IC 8"},{t:"09:30",e:"09:50",tr:"IC 6"}],
@@ -667,8 +714,8 @@ const ROUTES = {
 
 // Region groups for destination selection UI
 const DEST_GROUPS = {
-  central: ["lucerne","rigi","pilatus","bern"],
-  oberland: ["interlaken","harderKulm","grindelwaldFirst","jungfraujoch","lauterbrunnen","schynigePlatte","spiez","oeschinensee"],
+  central: ["lucerne","rigi","pilatus","bern","lungern"],
+  oberland: ["interlaken","harderKulm","grindelwaldFirst","jungfraujoch","lauterbrunnen","wengen","muerren","schynigePlatte","spiez","oeschinensee"],
   valais: ["zermatt","geneva"]
 };
 
@@ -1108,10 +1155,19 @@ function handleCityClick(id){
 function renderCostComparison(routes, numDays){
   const STP_PRICES = {3:254, 4:309, 5:399, 6:399};
   const stpPass = STP_PRICES[numDays] || 309;
-  // Eurail / Interrail Switzerland One Country Pass — 官方 2026 价格 (2等舱, 成人 28-59岁, CHF)
-  // 来源：SBB官网 Interrail One Country Pass 价目表 (瑞士所在价格组), 2026.01.01 起生效
-  const EURAIL_PRICES = {3:184, 4:260, 5:238, 6:261};
-  const eurailPass = EURAIL_PRICES[numDays] || 260;
+  // Eurail Global Pass — 2026 官方 2 等舱成人价 (欧元原价 → CHF，按当前汇率 EUR/CHF≈0.925 换算)
+  // 官方 Flexi 天数仅提供 4/5/7 天可选 (无 3 天/6 天档)，故 3 天行程按 4 天档计价，6 天行程按 7 天档计价
+  // 数据来源：myswissalps.com (2026.05 更新)：4日 = EUR 283；其余天数按同源价目表比例推算
+  const EURAIL_EUR = {4:283, 5:325, 7:386}; // 官方 Flexi 档位 (欧元)
+  const EUR_CHF_RATE = 0.925;
+  const EURAIL_PRICES = {
+    3: Math.round(EURAIL_EUR[4]*EUR_CHF_RATE),   // 3天行程 → 仍需买4日档
+    4: Math.round(EURAIL_EUR[4]*EUR_CHF_RATE),
+    5: Math.round(EURAIL_EUR[5]*EUR_CHF_RATE),
+    6: Math.round(EURAIL_EUR[7]*EUR_CHF_RATE)    // 6天行程 → 需买7日档 (无6日档)
+  };
+  const eurailPass = EURAIL_PRICES[numDays] || EURAIL_PRICES[4];
+  const eurailTierNote = {3:'需买 4 日档 (无 3 日档)',4:'4 日档',5:'5 日档',6:'需买 7 日档 (无 6 日档)'}[numDays] || '4 日档';
   const hfcPass = 150;
   const twinDayTicket = 89; // 双人日票：一人持半价卡，双人当日共用一张
   
@@ -1206,11 +1262,11 @@ function renderCostComparison(routes, numDays){
     </div>
     <div class="cost-col${opt3Total===minCost?' best':''}">
       <div class="cost-col-name">欧铁通票</div>
-      <div class="cost-col-sub">Eurail/Interrail 瑞士通票 · ${numDays} 日</div>
+      <div class="cost-col-sub">Eurail Global Pass · ${eurailTierNote}</div>
       <div class="cost-total"><span class="chf">CHF</span>${opt3Total}</div>
       <div class="cost-save">${vsFull(opt3Total)}</div>
       <ul class="cost-breakdown">
-        <li class="pass-cost"><span class="k">欧铁瑞士通票 (${numDays}日/1月内)</span><span class="v">${eurailPass}</span></li>
+        <li class="pass-cost"><span class="k">欧铁通票 (${eurailTierNote})</span><span class="v">${eurailPass}</span></li>
         ${eurailBreakdown.filter(b=>b.v>0).map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
         ${eurailBreakdown.filter(b=>b.free).length > 0 ? `<li><span class="k" style="color:var(--green)">${eurailBreakdown.filter(b=>b.free).length} 段国铁全免</span><span class="v" style="color:var(--green)">0</span></li>` : ''}
         <li class="subtotal"><span class="k">合计</span><span class="v">CHF ${opt3Total}</span></li>
@@ -1236,7 +1292,7 @@ function renderCostComparison(routes, numDays){
     <strong>说明：</strong>
     「无任何通票」= 每段单独在 SBB App 买票原价。
     「STP」= Swiss Travel Pass ${numDays} 日 CHF ${stpPass}，火车/巴士/游船全免，部分缆车/齿轨 25-50% 折扣，500+ 博物馆免费。
-    「欧铁通票」= Eurail/Interrail 瑞士 One Country Pass (SBB 官方 2026 价目，2等舱成人) ${numDays} 日 CHF ${eurailPass}，覆盖瑞士国铁网络，私营缆车/齿轨等山地交通通常有 25-50% 折扣 (按半价估算)；不含博物馆门票优惠。
+    「欧铁通票」= Eurail Global Pass (非欧盟居民适用) 2等舱成人价，欧元官方价按 EUR/CHF≈${EUR_CHF_RATE} 换算为 CHF；官方 Flexi 天数只提供 4/5/7 日档 (无 3 日/6 日档)，本次 ${numDays} 日行程按「${eurailTierNote}」计价 (CHF ${eurailPass})。覆盖瑞士国铁网络全免，私营缆车/齿轨等山地交通通常有 25-50% 折扣 (按半价估算)；不含博物馆门票优惠，且该通票主要面向跨国多国旅行者，仅在瑞士境内单独使用性价比通常不如 STP。
     「半价卡 + 双人日票」= 一人办理 Half Fare Card CHF 150 (一个月有效)，两人同行每天共用一张双人日票 CHF ${twinDayTicket}，覆盖当天两人的火车/巴士/游船段，缆车/齿轨等私营段两人均凭半价卡半价另购。
     <strong>注意：</strong>「半价卡 + 双人日票」一栏显示的是<strong>两人合计费用除以二后的人均价</strong>，已与其余各栏（均为单人费用）口径对齐，可直接比较。
   `;
