@@ -212,11 +212,13 @@ footer{padding:28px;text-align:center;font-size:11px;color:var(--muted);line-hei
 
 /* Cost comparison */
 .cost-wrap{padding:28px;border-bottom:1px solid var(--rule);background:var(--paper)}
-.cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--rule);background:#fdfbf6;max-width:1400px;margin:0 auto}
-@media(max-width:900px){.cost-grid{grid-template-columns:1fr}}
+.cost-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--rule);background:#fdfbf6;max-width:1400px;margin:0 auto}
+@media(max-width:1100px){.cost-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.cost-grid{grid-template-columns:1fr}}
 .cost-col{padding:28px 24px;border-right:1px solid var(--rule);position:relative}
 .cost-col:last-child{border-right:none}
-@media(max-width:900px){.cost-col{border-right:none;border-bottom:1px solid var(--rule)}.cost-col:last-child{border-bottom:none}}
+@media(max-width:1100px){.cost-col:nth-child(2n){border-right:none}}
+@media(max-width:640px){.cost-col{border-right:none;border-bottom:1px solid var(--rule)}.cost-col:last-child{border-bottom:none}}
 .cost-col.best{background:#fff}
 .cost-col.best::before{content:"推荐";position:absolute;top:-1px;left:-1px;background:var(--red);color:#fff;padding:4px 10px;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:0.18em}
 .cost-col-name{font-family:"Fraunces",serif;font-size:22px;font-weight:500;margin-bottom:4px}
@@ -1106,13 +1108,16 @@ function handleCityClick(id){
 function renderCostComparison(routes, numDays){
   const STP_PRICES = {3:254, 4:309, 5:399, 6:399};
   const stpPass = STP_PRICES[numDays] || 309;
+  // Eurail / Interrail Switzerland One Country Pass — 官方 2026 价格 (2等舱, 成人 28-59岁, CHF)
+  // 来源：SBB官网 Interrail One Country Pass 价目表 (瑞士所在价格组), 2026.01.01 起生效
+  const EURAIL_PRICES = {3:184, 4:212, 5:238, 6:261};
+  const eurailPass = EURAIL_PRICES[numDays] || 212;
   const hfcPass = 150;
-  const saverPerDay = 52; // without HFC
-  const saverPerDayHFC = 29; // with HFC early bird
+  const twinDayTicket = 89; // 双人日票：一人持半价卡，双人当日共用一张
   
   // Calculate segment costs for each option
-  let totalFull = 0, totalSTP = 0, totalHFC = 0;
-  const fullBreakdown = [], stpBreakdown = [], hfcBreakdown = [];
+  let totalFull = 0, totalSTP = 0, totalEurail = 0;
+  const fullBreakdown = [], stpBreakdown = [], eurailBreakdown = [];
   
   routes.forEach(r => {
     const rt = r.route;
@@ -1129,10 +1134,10 @@ function renderCostComparison(routes, numDays){
     totalSTP += stpP;
     stpBreakdown.push({k:label, v:stpP, free:stpP===0});
     
-    // HFC price  
-    const hfcP = rt.hfc.p || Math.round(full/2);
-    totalHFC += hfcP;
-    hfcBreakdown.push({k:label, v:hfcP});
+    // Eurail/Interrail price — 国铁段与 STP 同样全免；私营缆车/齿轨段享 25-50% 折扣，按半价估算
+    const eurailP = rt.stp.p === 0 ? 0 : (rt.hfc.p != null ? rt.hfc.p : Math.round(full/2));
+    totalEurail += eurailP;
+    eurailBreakdown.push({k:label, v:eurailP, free:eurailP===0});
   });
   
   // Option 1: No pass
@@ -1141,28 +1146,30 @@ function renderCostComparison(routes, numDays){
   // Option 2: STP
   const opt2Total = stpPass + totalSTP;
   
-  // Option 3: HFC + Saver Day Pass (early bird)
-  // Saver covers train segments, so we only add HFC-discounted cable car costs
+  // Option 3: Eurail / Interrail Switzerland Pass
+  const opt3Total = eurailPass + totalEurail;
+  
+  // Option 4: 半价卡 (一人) + 双人日票 CHF89/天 — 两人同行，总价除以二按人均显示
   let hfcCableExtra = 0;
-  const hfcSaverBreakdown = [];
+  const hfcTwinBreakdown = [];
   routes.forEach(r => {
     const rt = r.route;
     const from = DESTS[r.from], to = DESTS[r.to];
     const label = `${from?.cn||r.from}→${to?.cn||r.to}`;
     
     if(rt.saver.p === null){
-      // Not fully covered by Saver — use saverExtra (only cable car/cog at HFC price)
-      const extra = rt.saver.extra || rt.hfc.p || Math.round(rt.price/2);
+      // 双人日票不覆盖的私营缆车/齿轨段 — 按半价卡价格另购 (两人各一份)
+      const extra = (rt.saver.extra || rt.hfc.p || Math.round(rt.price/2)) * 2;
       hfcCableExtra += extra;
-      hfcSaverBreakdown.push({k:`${label} (缆车/齿轨半价)`, v:extra});
+      hfcTwinBreakdown.push({k:`${label} (缆车/齿轨半价 ×2人)`, v:extra});
     }
-    // If covered by Saver ("incl" or number), no extra cost for this segment
   });
-  const saverDays = numDays; // 每天都有移动，每天都需要一张
-  const opt3Total = hfcPass + (saverPerDayHFC * saverDays) + hfcCableExtra;
+  const twinDays = numDays;
+  const opt4CoupleTotal = hfcPass + (twinDayTicket * twinDays) + hfcCableExtra;
+  const opt4Total = Math.round(opt4CoupleTotal / 2); // 人均显示
   
-  // Determine best option
-  const minCost = Math.min(opt1Total, opt2Total, opt3Total);
+  // Determine best option (all now per-person figures)
+  const minCost = Math.min(opt1Total, opt2Total, opt3Total, opt4Total);
   
   // Helper: compare to no-pass baseline
   function vsFull(total){
@@ -1198,15 +1205,28 @@ function renderCostComparison(routes, numDays){
       </ul>
     </div>
     <div class="cost-col${opt3Total===minCost?' best':''}">
-      <div class="cost-col-name">半价卡 + Saver 早鸟</div>
-      <div class="cost-col-sub">HFC + ${saverDays} 张 Saver Day Pass</div>
+      <div class="cost-col-name">欧铁通票</div>
+      <div class="cost-col-sub">Eurail/Interrail 瑞士通票 · ${numDays} 日</div>
       <div class="cost-total"><span class="chf">CHF</span>${opt3Total}</div>
-      <div class="cost-save">${vsFull(opt3Total)}${opt3Total===minCost?' (需提前抢)':''}</div>
+      <div class="cost-save">${vsFull(opt3Total)}</div>
       <ul class="cost-breakdown">
-        <li class="pass-cost"><span class="k">Half Fare Card</span><span class="v">${hfcPass}</span></li>
-        <li class="pass-cost"><span class="k">Saver Day Pass ×${saverDays} (早鸟)</span><span class="v">${saverPerDayHFC * saverDays}</span></li>
-        ${hfcSaverBreakdown.map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
+        <li class="pass-cost"><span class="k">欧铁瑞士通票 (${numDays}日/1月内)</span><span class="v">${eurailPass}</span></li>
+        ${eurailBreakdown.filter(b=>b.v>0).map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
+        ${eurailBreakdown.filter(b=>b.free).length > 0 ? `<li><span class="k" style="color:var(--green)">${eurailBreakdown.filter(b=>b.free).length} 段国铁全免</span><span class="v" style="color:var(--green)">0</span></li>` : ''}
         <li class="subtotal"><span class="k">合计</span><span class="v">CHF ${opt3Total}</span></li>
+      </ul>
+    </div>
+    <div class="cost-col${opt4Total===minCost?' best':''}">
+      <div class="cost-col-name">半价卡 + 双人日票</div>
+      <div class="cost-col-sub">一人办半价卡 · 两人共用日票 CHF${twinDayTicket}/天</div>
+      <div class="cost-total"><span class="chf">CHF</span>${opt4Total}<small>/人</small></div>
+      <div class="cost-save">${vsFull(opt4Total)}</div>
+      <ul class="cost-breakdown">
+        <li class="pass-cost"><span class="k">Half Fare Card (一人办)</span><span class="v">${hfcPass}</span></li>
+        <li class="pass-cost"><span class="k">双人日票 ×${twinDays} (CHF${twinDayTicket}/天)</span><span class="v">${twinDayTicket * twinDays}</span></li>
+        ${hfcTwinBreakdown.map(b => `<li><span class="k">${b.k}</span><span class="v">${b.v}</span></li>`).join('')}
+        <li class="subtotal"><span class="k">两人合计</span><span class="v">CHF ${opt4CoupleTotal}</span></li>
+        <li class="subtotal"><span class="k">人均 (÷2)</span><span class="v">CHF ${opt4Total}</span></li>
       </ul>
     </div>
   `;
@@ -1216,8 +1236,9 @@ function renderCostComparison(routes, numDays){
     <strong>说明：</strong>
     「无任何通票」= 每段单独在 SBB App 买票原价。
     「STP」= Swiss Travel Pass ${numDays} 日 CHF ${stpPass}，火车/巴士/游船全免，部分缆车/齿轨 25-50% 折扣，500+ 博物馆免费。
-    「半价卡 + Saver 早鸟」= Half Fare Card CHF 150 (一个月有效) + 每天一张 Saver Day Pass (持 HFC 早鸟价 CHF ${saverPerDayHFC})，火车段日票含，缆车/齿轨用 HFC 半价另买。
-    <strong>注意：</strong>Saver Day Pass 早鸟价需提前 4-6 个月抢，旺季 7-8 月可能只买到 CHF 39-59 档。以上计算按最低早鸟价 CHF ${saverPerDayHFC} 估算。
+    「欧铁通票」= Eurail/Interrail 瑞士 One Country Pass (SBB 官方 2026 价目，2等舱成人) ${numDays} 日 CHF ${eurailPass}，覆盖瑞士国铁网络，私营缆车/齿轨等山地交通通常有 25-50% 折扣 (按半价估算)；不含博物馆门票优惠。
+    「半价卡 + 双人日票」= 一人办理 Half Fare Card CHF 150 (一个月有效)，两人同行每天共用一张双人日票 CHF ${twinDayTicket}，覆盖当天两人的火车/巴士/游船段，缆车/齿轨等私营段两人均凭半价卡半价另购。
+    <strong>注意：</strong>「半价卡 + 双人日票」一栏显示的是<strong>两人合计费用除以二后的人均价</strong>，已与其余各栏（均为单人费用）口径对齐，可直接比较。
   `;
 }
 
