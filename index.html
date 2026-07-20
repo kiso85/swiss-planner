@@ -654,7 +654,7 @@ const ROUTES = {
     tt:[{t:"07:35",e:"09:47",tr:"S3+JB"},{t:"08:05",e:"10:17",tr:"EigerEx"},{t:"08:35",e:"10:47",tr:"S3+JB"}],
     note:"5-10 月需强制预订座位 (CHF 10)。",tip:"STP 只给 25% 折扣 (私营齿轨段)。HFC 50% 折扣更划算。"},
   "interlaken-mannlichenHike":{dur:"半天 (约4-5小时)",durN:270,mode:"cable",type:"S3+WAB缆车+齿轨小火车",freq:"每30分钟",price:86,unit:"环线(不重复路线)",isReturn:true,
-    stp:{p:31,n:"火车段全免 + 缆车/齿轨段各50%折扣 (共31)"},hfc:{p:43,n:"全程50%折扣 — 这段半价卡最划算"},saver:{p:null,n:"火车段日票含，缆车/齿轨不覆盖",extra:62},
+    stp:{p:31,n:"火车段全免 + 缆车/齿轨段各50%折扣 (共31)"},hfc:{p:43,n:"全程50%折扣 — 这段半价卡最划算"},saver:{p:null,n:"火车段日票含，缆车/齿轨不覆盖 (需另买31)",extra:31},
     tt:[{t:"09:06",e:"~14:00",tr:"环线"},{t:"09:36",e:"~14:30",tr:"环线"},{t:"10:06",e:"~15:00",tr:"环线"}],
     note:"因特拉肯→文根(火车)→Männlichen(缆车上山)→徒步→Kleine Scheidegg→格林德瓦(小火车下山)→因特拉肯(火车)，全程约4-5小时，半天即可完成，比少女峰省时间也省钱。",
     tip:"半价卡在这段是最优选择：私营缆车/齿轨段 STP 只有约同等折扣，火车段又不如 STP 全免划算，整体半价卡通常最省心；沿途可近距离眺望艾格峰/僧侣峰/少女峰三连峰，不必真正登顶也能看全景。"},
@@ -1225,8 +1225,10 @@ function renderCostComparison(routes, numDays){
     totalSTP += stpP;
     stpBreakdown.push({k:label, v:stpP, free:stpP===0});
     
-    // Eurail/Interrail price — 国铁段与 STP 同样全免；私营缆车/齿轨段享 25-50% 折扣，按半价估算
-    const eurailP = rt.stp.p === 0 ? 0 : (rt.hfc.p != null ? rt.hfc.p : Math.round(full/2));
+    // Eurail/Interrail price — 国铁段与 STP 同样全免；私营缆车/齿轨的折扣由各私营铁路公司统一公布
+    // (通常 STP/欧铁/Interrail 适用同一档折扣率，如 First 缆车5折、少女峰齿轨75折即25%off)，
+    // 半价卡的50%是完全独立的另一套全国性优惠，不能套用在欧铁上 — 因此欧铁按 STP 同价计算
+    const eurailP = stpP;
     totalEurail += eurailP;
     eurailBreakdown.push({k:label, v:eurailP, free:eurailP===0});
   });
@@ -1249,10 +1251,13 @@ function renderCostComparison(routes, numDays){
     const label = `${from?.cn||r.from}→${to?.cn||r.to}`;
     
     if(rt.saver.p === null){
-      // 双人日票不覆盖的私营缆车/齿轨段 — 按半价卡价格另购 (两人各一份)
-      const extra = (rt.saver.extra || rt.hfc.p || Math.round(rt.price/2)) * 2;
-      hfcCableExtra += extra;
-      hfcTwinBreakdown.push({k:`${label} (缆车/齿轨半价 ×2人)`, v:extra});
+      // 双人日票不覆盖的私营缆车/齿轨段：半价卡记名不可转让，
+      // 只有持卡人本人享受半价，同伴没有卡、只能付全价
+      const holderPrice = rt.saver.extra || rt.hfc.p || Math.round(rt.price/2); // 持卡人半价
+      const companionPrice = holderPrice * 2; // 同伴无卡，全价 (半价的2倍)
+      const segTotal = holderPrice + companionPrice;
+      hfcCableExtra += segTotal;
+      hfcTwinBreakdown.push({k:`${label} (持卡人半价${holderPrice}+同伴全价${companionPrice})`, v:segTotal});
     }
   });
   const twinDays = numDays;
@@ -1327,8 +1332,8 @@ function renderCostComparison(routes, numDays){
     <strong>说明：</strong>
     「无任何通票」= 每段单独在 SBB App 买票原价。
     「STP」= Swiss Travel Pass ${numDays} 日 CHF ${stpPass}，火车/巴士/游船全免，部分缆车/齿轨 25-50% 折扣，500+ 博物馆免费。
-    「欧铁通票」= Eurail Global Pass (非欧盟居民适用) 2等舱成人价，欧元官方价按 EUR/CHF≈${EUR_CHF_RATE} 换算为 CHF；官方 Flexi 天数只提供 4/5/7 日档 (无 3 日/6 日档)，本次 ${numDays} 日行程按「${eurailTierNote}」计价 (CHF ${eurailPass})。覆盖瑞士国铁网络全免，私营缆车/齿轨等山地交通通常有 25-50% 折扣 (按半价估算)；不含博物馆门票优惠，且该通票主要面向跨国多国旅行者，仅在瑞士境内单独使用性价比通常不如 STP。
-    「半价卡 + 双人日票」= 一人办理 Half Fare Card CHF 150 (一个月有效)，两人同行每天共用一张双人日票 CHF ${twinDayTicket}，覆盖当天两人的火车/巴士/游船段，缆车/齿轨等私营段两人均凭半价卡半价另购。
+    「欧铁通票」= Eurail Global Pass (非欧盟居民适用) 2等舱成人价，欧元官方价按 EUR/CHF≈${EUR_CHF_RATE} 换算为 CHF；官方 Flexi 天数只提供 4/5/7 日档 (无 3 日/6 日档)，本次 ${numDays} 日行程按「${eurailTierNote}」计价 (CHF ${eurailPass})。国铁网络与 STP 同样全免；私营缆车/齿轨的折扣由各私营铁路公司统一公布，通常 STP/欧铁/Interrail 适用同一档折扣率 (如 First 缆车 5 折、少女峰齿轨 7.5 折即 25% off)，因此这里私营段按 STP 同等折扣计价；半价卡的 50% 是完全独立的另一套全国性优惠，不适用于欧铁。不含博物馆门票优惠，且该通票主要面向跨国多国旅行者，仅在瑞士境内单独使用性价比通常不如 STP。
+    「半价卡 + 双人日票」= 一人办理 Half Fare Card CHF 150 (一个月有效)，两人同行每天共用一张双人日票 CHF ${twinDayTicket}，覆盖当天两人的火车/巴士/游船段；缆车/齿轨等私营段日票不覆盖，且半价卡记名不可转让 — 持卡人本人半价，同伴没有卡只能付全价。
     <strong>注意：</strong>「半价卡 + 双人日票」一栏显示的是<strong>两人合计费用除以二后的人均价</strong>，已与其余各栏（均为单人费用）口径对齐，可直接比较。
   `;
 }
