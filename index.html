@@ -500,6 +500,19 @@ const DESTS = {
       {name:"Eiger Express 缆车",price:0,badges:[{type:"discount",text:"票价含"}]},
       {name:"座位预订费 (5-10月强制)",price:10,badges:[]}
     ]},
+  mannlichenHike:{name:"Männlichen–Kleine Scheidegg",cn:"曼利兴-小夏戴克徒步",region:"oberland",mx:412,my:288,halfDay:true,
+    tag:"少女峰全景徒步替代方案 · 半天可完成 · 半价卡最划算",
+    transports:[
+      {mode:"火车",seg:"因特拉肯→文根",stp:"免费",sdp:"含",p:12},
+      {mode:"缆车",seg:"文根→Männlichen (上山)",stp:"-50%",sdp:"不含",p:31},
+      {mode:"齿轨",seg:"Kleine Scheidegg→格林德瓦 (下山)",stp:"-50%",sdp:"不含",p:31},
+      {mode:"火车",seg:"格林德瓦→因特拉肯",stp:"免费",sdp:"含",p:12}
+    ],
+    attractions:[
+      {name:"Männlichen 全景步道",price:0,badges:[{type:"free",text:"免费"}]},
+      {name:"Kleine Scheidegg 观景平台 (艾格/僧侣/少女三峰)",price:0,badges:[{type:"free",text:"免费"}]},
+      {name:"沿途高山草甸徒步 (约1.5-2小时)",price:0,badges:[{type:"free",text:"免费"}]}
+    ]},
   lauterbrunnen:{name:"Lauterbrunnen",cn:"劳特布鲁嫩",region:"oberland",mx:388,my:300,halfDay:true,
     tag:"瀑布谷 · 72 条瀑布从悬崖落下",
     transports:[
@@ -640,6 +653,11 @@ const ROUTES = {
     stp:{p:196,n:"Interlaken→Wengen 免费，上山段25%折扣"},hfc:{p:131,n:"全程50%折扣 — 最划算"},saver:{p:null,n:"不覆盖上山段",extra:131},
     tt:[{t:"07:35",e:"09:47",tr:"S3+JB"},{t:"08:05",e:"10:17",tr:"EigerEx"},{t:"08:35",e:"10:47",tr:"S3+JB"}],
     note:"5-10 月需强制预订座位 (CHF 10)。",tip:"STP 只给 25% 折扣 (私营齿轨段)。HFC 50% 折扣更划算。"},
+  "interlaken-mannlichenHike":{dur:"半天 (约4-5小时)",durN:270,mode:"cable",type:"S3+WAB缆车+齿轨小火车",freq:"每30分钟",price:86,unit:"环线(不重复路线)",isReturn:true,
+    stp:{p:31,n:"火车段全免 + 缆车/齿轨段各50%折扣 (共31)"},hfc:{p:43,n:"全程50%折扣 — 这段半价卡最划算"},saver:{p:null,n:"火车段日票含，缆车/齿轨不覆盖",extra:62},
+    tt:[{t:"09:06",e:"~14:00",tr:"环线"},{t:"09:36",e:"~14:30",tr:"环线"},{t:"10:06",e:"~15:00",tr:"环线"}],
+    note:"因特拉肯→文根(火车)→Männlichen(缆车上山)→徒步→Kleine Scheidegg→格林德瓦(小火车下山)→因特拉肯(火车)，全程约4-5小时，半天即可完成，比少女峰省时间也省钱。",
+    tip:"半价卡在这段是最优选择：私营缆车/齿轨段 STP 只有约同等折扣，火车段又不如 STP 全免划算，整体半价卡通常最省心；沿途可近距离眺望艾格峰/僧侣峰/少女峰三连峰，不必真正登顶也能看全景。"},
   "interlaken-lauterbrunnen":{dur:"20 min",durN:20,mode:"train",type:"S3",freq:"每30分钟",price:8,
     stp:{p:0,n:"STP 全免"},hfc:{p:4,n:"半价"},saver:{p:"incl",n:"日票含 · CHF 52 起 / HFC CHF 29 起"},
     tt:[{t:"频繁",e:"—",tr:"S3"}],note:"S3 列车直达。",tip:"劳特布鲁嫩是 72 条瀑布的起点。"},
@@ -729,7 +747,7 @@ const ROUTES = {
 // Region groups for destination selection UI
 const DEST_GROUPS = {
   central: ["lucerne","rigi","pilatus","bern","lungern"],
-  oberland: ["interlaken","harderKulm","grindelwaldFirst","jungfraujoch","lauterbrunnen","wengen","muerren","schynigePlatte","spiez","oeschinensee"],
+  oberland: ["interlaken","harderKulm","grindelwaldFirst","jungfraujoch","mannlichenHike","lauterbrunnen","wengen","muerren","schynigePlatte","spiez","oeschinensee"],
   valais: ["zermatt","geneva"]
 };
 
@@ -1045,8 +1063,10 @@ function renderMap(days, routes){
       <g class="city-dot" transform="translate(${d.mx},${d.my})" onclick="handleCityClick('${id}')">
         <circle r="10" fill="#d8232a" opacity="0.15"/>
         <circle r="4" fill="#0e0e0e"/>
-        <text class="city-label" x="12" y="2">${d.name}</text>
-        <text class="city-label-cn" x="12" y="13">${d.cn}</text>
+        <g class="label-scale">
+          <text class="city-label" x="12" y="2">${d.name}</text>
+          <text class="city-label-cn" x="12" y="13">${d.cn}</text>
+        </g>
       </g>`;
   });
 }
@@ -1322,6 +1342,12 @@ let mapZoom = {scale:1, x:0, y:0};
 function applyMapTransform(){
   const g = document.getElementById('mapZoomGroup');
   if(g) g.setAttribute('transform', `translate(${mapZoom.x} ${mapZoom.y}) scale(${mapZoom.scale})`);
+  // Counter-scale labels: text stays same size (or gets relatively smaller) instead of
+  // growing along with the zoom, so labels stop overlapping as you zoom in.
+  const labelScale = Math.pow(mapZoom.scale, -1.15);
+  document.querySelectorAll('.label-scale').forEach(function(el){
+    el.setAttribute('transform', `scale(${labelScale})`);
+  });
 }
 function clampMapPan(){
   const maxPan = 400 * (mapZoom.scale - 1) + 250;
